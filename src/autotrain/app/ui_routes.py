@@ -314,29 +314,57 @@ signal.signal(signal.SIGTERM, graceful_exit)
 
 logger.info("AutoTrain started successfully")
 
-from huggingface_hub.utils import build_hf_headers, get_session
 
-async def user_authentication(request: Request):
-    token = request.headers.get("Authorization")
-    if not token:
-        raise HTTPException(status_code=401, detail="No token provided")
-    
-    token = token.split(" ")[1] if " " in token else token
-    
-    try:
-        headers = build_hf_headers(token=token)
-        response = get_session().get(
-            "https://huggingface.co/api/whoami-v2", 
-            headers=headers,
-            timeout=3
-        )
-        response.raise_for_status()
-        user_info = response.json()
-        return user_info["name"]
-    except Exception as e:
-        logger.error(f"Failed to verify token: {str(e)}")
-        raise HTTPException(status_code=401, detail="Invalid token. Please login with a write token.")
+def user_authentication(request: Request):
+    """
+    Authenticates the user based on the following priority:
+    1. HF_TOKEN environment variable
+    2. OAuth information in session
+    3. Token in bearer header (not implemented in the given code)
 
+    Args:
+        request (Request): The incoming HTTP request object.
+
+    Returns:
+        str: The authenticated token if verification is successful.
+
+    Raises:
+        HTTPException: If the token is invalid or expired and the application is not running in a space.
+
+    If the application is running in a space and authentication fails, it returns a login template response.
+    """
+    # priority: hf_token env var > oauth_info in session > token in bearer header
+    # if "oauth_info" in request.session:
+    if HF_TOKEN is not None:
+        try:
+            _ = token_verification(token=os.environ.get("HF_TOKEN"))
+            return HF_TOKEN
+        except Exception as e:
+            logger.error(f"Failed to verify token: {e}")
+            if IS_RUNNING_IN_SPACE:
+                return templates.TemplateResponse("login.html", {"request": request})
+            else:
+                raise HTTPException(
+                    status_code=status.HTTP_401_UNAUTHORIZED,
+                    detail="Invalid or expired token: HF_TOKEN",
+                )
+
+    if IS_RUNNING_IN_SPACE and "oauth_info" in request.session:
+        try:
+            _ = token_verification(token=request.session["oauth_info"]["access_token"])
+            return request.session["oauth_info"]["access_token"]
+        except Exception as e:
+            request.session.pop("oauth_info", None)
+            logger.error(f"Failed to verify token: {e}")
+            return templates.TemplateResponse("login.html", {"request": request})
+
+    if IS_RUNNING_IN_SPACE:
+        return templates.TemplateResponse("login.html", {"request": request})
+
+    raise HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        detail="Invalid or expired token",
+    )
 
 @ui_router.get("/", response_class=HTMLResponse)
 async def load_index(request: Request, token: str = Depends(user_authentication)):
