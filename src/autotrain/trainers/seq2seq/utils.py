@@ -9,7 +9,6 @@ ROUGE_METRIC = evaluate.load("rouge")
 
 MODEL_CARD = """
 ---
-library_name: transformers
 tags:
 - autotrain
 - text2text-generation{base_model}

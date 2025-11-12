@@ -19,6 +19,7 @@ from autotrain.app.params import AppParams, get_task_params
 from autotrain.app.utils import get_running_jobs, get_user_and_orgs, kill_process_by_pid, token_verification
 from autotrain.dataset import (
     AutoTrainDataset,
+    AutoTrainDreamboothDataset,
     AutoTrainImageClassificationDataset,
     AutoTrainImageRegressionDataset,
     AutoTrainObjectDetectionDataset,
@@ -366,6 +367,7 @@ def user_authentication(request: Request):
         detail="Invalid or expired token",
     )
 
+
 @ui_router.get("/", response_class=HTMLResponse)
 async def load_index(request: Request, token: str = Depends(user_authentication)):
     """
@@ -462,6 +464,8 @@ async def fetch_model_choices(
         hub_models = MODEL_CHOICE["sentence-transformers"]
     elif task == "image-classification":
         hub_models = MODEL_CHOICE["image-classification"]
+    elif task == "dreambooth":
+        hub_models = MODEL_CHOICE["dreambooth"]
     elif task == "seq2seq":
         hub_models = MODEL_CHOICE["seq2seq"]
     elif task == "tabular:classification":
@@ -570,6 +574,9 @@ async def handle_form(
             status_code=400, detail="Please upload a dataset or choose a dataset from the Hugging Face Hub."
         )
 
+    if len(hub_dataset) > 0 and task == "dreambooth":
+        raise HTTPException(status_code=400, detail="Dreambooth does not support Hugging Face Hub datasets.")
+
     if len(hub_dataset) > 0:
         if not train_split:
             raise HTTPException(status_code=400, detail="Please enter a training split.")
@@ -577,12 +584,7 @@ async def handle_form(
     if len(hub_dataset) == 0:
         file_extension = os.path.splitext(data_files_training[0].filename)[1]
         file_extension = file_extension[1:] if file_extension.startswith(".") else file_extension
-        
-        if task == "dreambooth":
-            from autotrain.trainers.dreambooth.params import DreamBoothTrainingParams
-            params = DreamBoothTrainingParams(**json.loads(params_str))
-
-        elif task == "image-classification":
+        if task == "image-classification":
             dset = AutoTrainImageClassificationDataset(
                 train_data=training_files[0],
                 token=token,
@@ -610,6 +612,15 @@ async def handle_form(
                 username=autotrain_user,
                 valid_data=validation_files[0] if validation_files else None,
                 percent_valid=None,  # TODO: add to UI
+                local=hardware.lower() == "local-ui",
+            )
+        elif task == "dreambooth":
+            dset = AutoTrainDreamboothDataset(
+                concept_images=data_files_training,
+                concept_name=params["prompt"],
+                token=token,
+                project_name=project_name,
+                username=autotrain_user,
                 local=hardware.lower() == "local-ui",
             )
         elif task.startswith("vlm:"):

@@ -30,7 +30,6 @@ MULTI_CLASS_CLASSIFICATION_EVAL_METRICS = (
 
 MODEL_CARD = """
 ---
-library_name: transformers
 tags:
 - autotrain
 - text-classification{base_model}

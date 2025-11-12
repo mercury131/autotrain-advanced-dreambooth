@@ -3,6 +3,7 @@ import argparse
 from autotrain import __version__, logger
 from autotrain.cli.run_api import RunAutoTrainAPICommand
 from autotrain.cli.run_app import RunAutoTrainAppCommand
+from autotrain.cli.run_dreambooth import RunAutoTrainDreamboothCommand
 from autotrain.cli.run_extractive_qa import RunAutoTrainExtractiveQACommand
 from autotrain.cli.run_image_classification import RunAutoTrainImageClassificationCommand
 from autotrain.cli.run_image_regression import RunAutoTrainImageRegressionCommand
@@ -18,7 +19,7 @@ from autotrain.cli.run_text_regression import RunAutoTrainTextRegressionCommand
 from autotrain.cli.run_token_classification import RunAutoTrainTokenClassificationCommand
 from autotrain.cli.run_tools import RunAutoTrainToolsCommand
 from autotrain.parser import AutoTrainConfigParser
-from autotrain.cli.run_dreambooth import RunAutoTrainDreamboothCommand
+
 
 def main():
     parser = argparse.ArgumentParser(
@@ -31,10 +32,10 @@ def main():
     commands_parser = parser.add_subparsers(help="commands")
 
     # Register commands
-    RunAutoTrainDreamboothCommand.register_subcommand(commands_parser)
     RunAutoTrainAppCommand.register_subcommand(commands_parser)
     RunAutoTrainLLMCommand.register_subcommand(commands_parser)
     RunSetupCommand.register_subcommand(commands_parser)
+    RunAutoTrainDreamboothCommand.register_subcommand(commands_parser)
     RunAutoTrainAPICommand.register_subcommand(commands_parser)
     RunAutoTrainTextClassificationCommand.register_subcommand(commands_parser)
     RunAutoTrainImageClassificationCommand.register_subcommand(commands_parser)

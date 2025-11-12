@@ -76,6 +76,10 @@
                     fields = ['tokens', 'tags'];
                     fieldNames = ['tokens', 'tags'];
                     break;
+                case 'dreambooth':
+                    fields = ['image'];
+                    fieldNames = ['image'];
+                    break;
                 case 'image-classification':
                     fields = ['image', 'label'];
                     fieldNames = ['image', 'label'];
@@ -128,8 +132,8 @@
 
         function toggleValidationTab() {
             const task = taskSelect.value;
-            // Check if the selected task is any LLM task
-            if (task.includes('llm:')) {
+            // Check if the selected task is DreamBooth or any LLM task
+            if (task === 'dreambooth' || task.includes('llm:')) {
                 validDataTab.style.display = 'none'; // Hide the tab
             } else {
                 validDataTab.style.display = 'block'; // Show the tab
@@ -218,10 +222,10 @@
                             <option value="token-classification">Token Classification</option>
                         </optgroup>
                         <optgroup label="Image Tasks">
+                            <option value="dreambooth">DreamBooth LoRA</option>
                             <option value="image-classification">Image Classification</option>
                             <option value="image-regression">Image Scoring/Regression</option>
                             <option value="image-object-detection">Object Detection</option>
-							<option value="dreambooth">DreamBooth</option>
                         </optgroup>
                         <optgroup label="Tabular Tasks">
                             <option value="tabular:classification">Tabular Classification</option>

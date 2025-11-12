@@ -27,7 +27,6 @@ VALID_METRICS = (
 
 MODEL_CARD = """
 ---
-library_name: transformers
 tags:
 - autotrain
 - object-detection

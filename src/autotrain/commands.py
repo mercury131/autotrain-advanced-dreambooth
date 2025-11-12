@@ -5,6 +5,7 @@ import torch
 
 from autotrain import logger
 from autotrain.trainers.clm.params import LLMTrainingParams
+from autotrain.trainers.dreambooth.params import DreamBoothTrainingParams
 from autotrain.trainers.extractive_question_answering.params import ExtractiveQuestionAnsweringParams
 from autotrain.trainers.generic.params import GenericParams
 from autotrain.trainers.image_classification.params import ImageClassificationParams
@@ -102,6 +103,7 @@ def launch_command(params):
     Args:
         params (object): An instance of one of the training parameter classes. This can be one of the following:
             - LLMTrainingParams
+            - DreamBoothTrainingParams
             - GenericParams
             - TabularParams
             - TextClassificationParams
@@ -150,7 +152,14 @@ def launch_command(params):
                 os.path.join(params.project_name, "training_params.json"),
             ]
         )
-
+    elif isinstance(params, DreamBoothTrainingParams):
+        cmd = [
+            "python",
+            "-m",
+            "autotrain.trainers.dreambooth",
+            "--training_config",
+            os.path.join(params.project_name, "training_params.json"),
+        ]
     elif isinstance(params, GenericParams):
         cmd = [
             "python",
